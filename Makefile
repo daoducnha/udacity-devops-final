@@ -10,6 +10,6 @@ install:
 test:
 
 lint:
-	hadolint ./app/Dockerfile
+	hadolint --ignore DL3013 ./app/Dockerfile
 	pylint --disable=R,C,W1203,W1202 app.py
 
