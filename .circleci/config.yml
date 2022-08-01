@@ -55,8 +55,27 @@ jobs:
           name: push image to docker hub
           command: |
             docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
-            docker tag app "daoducnha29493/udacity-devops-final:${CIRCLE_SHA1}"
-            docker push "daoducnha29493/udacity-devops-final:${CIRCLE_SHA1}"
+            docker tag app "daoducnha29493/udacity-devops-final:${CIRCLE_WORKFLOW_ID:0:7}"
+            docker push "daoducnha29493/udacity-devops-final:${CIRCLE_WORKFLOW_ID:0:7}"
+ 
+  deploy-infrastructure:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["60:80:b1:bd:0d:0c:c7:ca:60:32:48:36:68:c6:22:4b"]
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible
+      - run:
+          name: create eks cluster
+          command: |
+            cd .circleci/ansible
+            cat inventory.txt
+            ansible-playbook -i inventory.txt configure-server.yml
+
 
 workflows:
   default:
