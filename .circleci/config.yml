@@ -51,7 +51,7 @@ jobs:
           key: v1-{{ .Branch }}-{{ epoch }}
           paths:
             - /caches/app.tar
-      - push_iamge:
+      - run:
           name: push image to docker hub
           command: |
             docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
