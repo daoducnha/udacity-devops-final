@@ -48,6 +48,7 @@ jobs:
       - run:
           name: Build docker iamge
           command: |
+            cd ~/app
             docker build -t app .
       - save_cache:
           key: v1-{{ .Branch }}-{{ epoch }}
@@ -56,6 +57,7 @@ jobs:
       - run:
           name: push image to docker hub
           command: |
+            cd ~/app
             docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
             docker tag app "daoducnha29493/udacity-devops-final:${CIRCLE_SHA1}"
             docker push "daoducnha29493/udacity-devops-final:${CIRCLE_SHA1}"
