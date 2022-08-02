@@ -65,7 +65,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Create eks cluster
+          name: "Create eks cluster"
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/eks-cluster.yml \
