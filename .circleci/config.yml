@@ -67,21 +67,21 @@ jobs:
       - run:
           name: "Create eks cluster"
           command: |
+            cd .circleci/files
             aws cloudformation deploy \
-              --template-file .circleci/files/eks-cluster.yml \
-              --parameters .circleci/files/eks-cluster-parameters.json \
+              --template-file eks-cluster.yml \
               --tags project=udacity-final-project \
               --stack-name "udacity-final-project-cluster-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"             
+              --parameter-overrides file://eks-cluster-parameters.json             
       - run:
           name: Create group node for eks
           command: |
+            cd .circleci/files
             aws cloudformation deploy \
-              --template-file .circleci/files/eks-group-node.yml \
-              --parameters .circleci/files/eks-group-node-parameters.json \
+              --template-file eks-group-node.yml \
               --tags project=udacity-final-project \
               --stack-name "udacity-final-project-groupnode-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
+              --parameter-overrides file://eks-group-node-parameters.json
 
   deploy-app:
     docker:
