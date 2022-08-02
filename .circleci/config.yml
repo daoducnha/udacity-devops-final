@@ -75,7 +75,7 @@ jobs:
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"             
       - run:
           name: Create group node for eks
-          commnad: |
+          command: |
             aws cloudformation deploy \
               --template-file .circleci/files/eks-group-node.yml \
               --parameters .circleci/files/eks-group-node-parameters.json \
