@@ -72,8 +72,7 @@ jobs:
               --parameters .circleci/files/eks-cluster-parameters.json \
               --tags project=udacity-final-project \
               --stack-name "udacity-final-project-cluster-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
-              
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"             
       - run:
           name: Create group node for eks
           commnad: |
