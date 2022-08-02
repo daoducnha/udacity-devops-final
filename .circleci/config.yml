@@ -18,6 +18,7 @@ jobs:
           name: "Check syntaxt code"
           command: |
             make lint
+
   build_image:
     docker:
       - image: docker:17.05.0-ce-git
@@ -71,7 +72,8 @@ jobs:
               --parameters .circleci/files/eks-cluster-parameters.json \
               --tags project=udacity-final-project \
               --stack-name "udacity-final-project-cluster-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" 
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
+              
       - run:
           name: Create group node for eks
           commnad: |
@@ -81,7 +83,7 @@ jobs:
               --tags project=udacity-final-project \
               --stack-name "udacity-final-project-groupnode-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
-      
+
   deploy-app:
     docker:
       - image: amazon/aws-cli
@@ -125,8 +127,13 @@ jobs:
             apk add --update curl nodejs npm
             pip install awscli
       - run:
+          name: show app endpoint
+          command: |
+            cat ~/app-endpoint.txt
+      - run:
           name: Smoke test.
           command: |
+            cat ~/app-endpoint.txt
             export APP_IP=$(cat ~/app-endpoint.txt)
             echo "${APP_IP}"
             if curl "${APP_IP}/hello" | grep "Hello"
@@ -142,10 +149,10 @@ workflows:
       - check_syntax
       - build_image:
           requires: [check_syntax]
-      # - deploy-infrastructure:
-      #     requires: [check_syntax]
-      # - deploy-app:
-      #     requires: [deploy-infrastructure]
+      - deploy-infrastructure:
+          requires: [check_syntax]
+      - deploy-app:
+          requires: [deploy-infrastructure]
       # - smoke-test:
       #     requires: [deploy-app]
 
