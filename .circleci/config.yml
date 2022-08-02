@@ -72,7 +72,8 @@ jobs:
               --template-file eks-cluster.yml \
               --tags project=udacity-final-project \
               --stack-name "udacity-final-project-cluster-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides file://eks-cluster-parameters.json             
+              --parameter-overrides file://eks-cluster-parameters.json \
+              --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"             
       - run:
           name: Create group node for eks
           command: |
@@ -81,7 +82,8 @@ jobs:
               --template-file eks-group-node.yml \
               --tags project=udacity-final-project \
               --stack-name "udacity-final-project-groupnode-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides file://eks-group-node-parameters.json
+              --parameter-overrides file://eks-group-node-parameters.json \
+              --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" 
 
   deploy-app:
     docker:
