@@ -30,12 +30,5 @@
     {
 		"ParameterKey": "EKSIAMRoleName",
 		"ParameterValue": "udacity-devops-project-final-role"
-	},
-    {
-		"ParameterKey": "EKSIAMNodeGroupRoleName",
-		"ParameterValue": "udacity-devops-project-final-node-role"
 	}
-    
-    
-    
 ]

@@ -60,22 +60,81 @@ jobs:
  
   deploy-infrastructure:
     docker:
-      - image: python:3.7-alpine3.11
+      - image: amazon/aws-cli
     steps:
       - checkout
-      - add_ssh_keys:
-          fingerprints: ["60:80:b1:bd:0d:0c:c7:ca:60:32:48:36:68:c6:22:4b"]
+      - run:
+          name: Create eks cluster
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/eks-cluster.yml \
+              --parameters .circleci/files/eks-cluster-parameters.json \
+              --tags project=udacity-final-project \
+              --stack-name "udacity-final-project-cluster-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" 
+      - run:
+          name: Create group node for eks
+          commnad: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/eks-group-node.yml \
+              --parameters .circleci/files/eks-group-node-parameters.json \
+              --tags project=udacity-final-project \
+              --stack-name "udacity-final-project-groupnode-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
+      
+  deploy-app:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Install kubectl
+          command: |
+            curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+      - run:
+          name: Config kubectl connect to aws
+          command: |
+            aws eks update-kubeconfig --region us-east-1  --name udacity-devops-project-final
+      - run:
+          name: Create deployment
+          command: |
+            kubectl create deploy udacity-${CIRCLE_WORKFLOW_ID:0:7} --image=daoducnha29493/udacity-devops-final:${CIRCLE_WORKFLOW_ID:0:7}
+      - run:
+          name: Expose deployment
+          command: |
+            kubectl expose deployment udacity-${CIRCLE_WORKFLOW_ID:0:7} --type=LoadBalancer --name=publicapp-${CIRCLE_WORKFLOW_ID:0:7} --port=80
+      - run:
+          name: store app endpoint and old
+          command: |
+            kubectl get services publicapp-${CIRCLE_WORKFLOW_ID:0:7} --output jsonpath='{.status.loadBalancer.ingress[0].hostname}' > ~/app-endpoint.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - ~/app-endpoint.txt
+
+  smoke-test:
+    docker:
+      - image: python:3.9.1-alpine3.12
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/
       - run:
           name: Install dependencies
           command: |
-            apk add --update ansible
+            apk add --update curl nodejs npm
+            pip install awscli
       - run:
-          name: create eks cluster
+          name: Smoke test.
           command: |
-            cd .circleci/ansible
-            cat inventory.txt
-            ansible-playbook -i inventory.txt configure-server.yml
-
+            export APP_IP=$(cat ~/app-endpoint.txt)
+            echo "${APP_IP}"
+            if curl "${APP_IP}/hello" | grep "Hello"
+            then
+              return 0
+            else
+              return 1
+            fi
 
 workflows:
   default:
@@ -83,5 +142,10 @@ workflows:
       - check_syntax
       - build_image:
           requires: [check_syntax]
-
+      # - deploy-infrastructure:
+      #     requires: [check_syntax]
+      # - deploy-app:
+      #     requires: [deploy-infrastructure]
+      # - smoke-test:
+      #     requires: [deploy-app]
 
