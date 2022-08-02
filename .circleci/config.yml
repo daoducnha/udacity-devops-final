@@ -149,10 +149,10 @@ workflows:
       - check_syntax
       - build_image:
           requires: [check_syntax]
-      - deploy-infrastructure:
+      - deploy_infrastructure:
           requires: [check_syntax]
       - deploy-app:
-          requires: [deploy-infrastructure]
+          requires: [deploy_infrastructure]
       # - smoke-test:
       #     requires: [deploy-app]
 
