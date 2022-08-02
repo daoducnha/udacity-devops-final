@@ -59,7 +59,7 @@ jobs:
             docker tag app "daoducnha29493/udacity-devops-final:${CIRCLE_WORKFLOW_ID:0:7}"
             docker push "daoducnha29493/udacity-devops-final:${CIRCLE_WORKFLOW_ID:0:7}"
  
-  deploy-infrastructure:
+  deploy_infrastructure:
     docker:
       - image: amazon/aws-cli
     steps:
