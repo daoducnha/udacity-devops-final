@@ -105,19 +105,20 @@ jobs:
       - run:
           name: Create deployment
           command: |
-            kubectl create deploy udacity-${CIRCLE_WORKFLOW_ID:0:7} --image=daoducnha29493/udacity-devops-final:${CIRCLE_WORKFLOW_ID:0:7}
+            kubectl create deploy udacity-5ba0775 --image=daoducnha29493/udacity-devops-final:5ba0775
       - run:
           name: Expose deployment
           command: |
-            kubectl expose deployment udacity-${CIRCLE_WORKFLOW_ID:0:7} --type=LoadBalancer --name=publicapp-${CIRCLE_WORKFLOW_ID:0:7} --port=80
+            kubectl expose deployment udacity-5ba0775 --type=LoadBalancer --name=publicapp-5ba0775 --port=80
       - run:
           name: store app endpoint and old
           command: |
-            kubectl get services publicapp-${CIRCLE_WORKFLOW_ID:0:7} --output jsonpath='{.status.loadBalancer.ingress[0].hostname}' > ~/app-endpoint.txt
+            cd .circleci/files
+            kubectl get services publicapp-5ba0775 --output jsonpath='{.status.loadBalancer.ingress[0].hostname}' >> app-endpoint.txt
       - persist_to_workspace:
           root: ~/
           paths:
-            - ~/app-endpoint.txt
+            - project/.circleci/files/app-endpoint.txt
 
   smoke-test:
     docker:
@@ -134,12 +135,13 @@ jobs:
       - run:
           name: show app endpoint
           command: |
-            cat ~/app-endpoint.txt
+            cd .circleci/files
+            cat app-endpoint.txt
       - run:
           name: Smoke test.
           command: |
-            cat ~/app-endpoint.txt
-            export APP_IP=$(cat ~/app-endpoint.txt)
+            cd .circleci/files
+            export APP_IP=$(cat app-endpoint.txt)
             echo "${APP_IP}"
             if curl "${APP_IP}/hello" | grep "Hello"
             then
@@ -186,12 +188,12 @@ workflows:
   default:
     jobs:
       - check_syntax
-      - build_image:
-          requires: [check_syntax]
-      - deploy_infrastructure:
-          requires: [build_image]
+      # - build_image:
+      #     requires: [check_syntax]
+      # - deploy_infrastructure:
+      #     requires: [build_image]
       - deploy-app:
-          requires: [deploy_infrastructure]
+          # requires: [deploy_infrastructure]
       - smoke-test:
           requires: [deploy-app]
       - cleanup:
