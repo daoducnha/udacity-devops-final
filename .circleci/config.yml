@@ -105,18 +105,18 @@ jobs:
       - run:
           name: Create deployment
           command: |
-            kubectl create deploy udacity-f0d1e715 --image=daoducnha29493/udacity-devops-final:e564f5c
+            kubectl create deploy udacity-f0d1e716 --image=daoducnha29493/udacity-devops-final:e564f5c
       - run:
           name: Expose deployment
           command: |
-            kubectl expose deployment udacity-f0d1e715 --type=LoadBalancer --name=publicapp-f0d1e715 --port=80
+            kubectl expose deployment udacity-f0d1e716 --type=LoadBalancer --name=publicapp-f0d1e716 --port=80
             sleep 1m
       - run:
           name: store app endpoint and old
           command: |
             cd .circleci/files
             kubectl get services
-            api=$(kubectl get services publicapp-f0d1e715 --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+            api=$(kubectl get services publicapp-f0d1e716 --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
             echo $api >> app-endpoint.txt
             cat app-endpoint.txt
       - persist_to_workspace:
@@ -168,31 +168,20 @@ jobs:
       - attach_workspace:
           at: ~/
       - run:
-          name: Get old stack workflow id
+          name: Install kubectl
           command: |
-            export OldWorkflowID=$(aws cloudformation \
-                    list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-                    --no-paginate --output text)
-            echo OldWorkflowID: "${OldWorkflowID}"
-            echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"
-            export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
-                    --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
-            echo Stack names: "${STACKS[@]}"
-            echo "${OldWorkflowID}" > ~/OldWorkflowID.txt
+            curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+            install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
       - run:
-          name: Remove old stacks and files
-          no_output_timeout: 30m
+          name: Config kubectl connect to aws
           command: |
-            OldWorkflowID=$(cat ~/OldWorkflowID.txt)
-            echo "OldWorkflowID: ${OldWorkflowID}"
-
-            if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OldWorkflowID}" ]]
-            then
-              aws cloudformation delete-stack --stack-name "udacity-final-project-groupnode-${CIRCLE_WORKFLOW_ID:0:7}"
-              aws cloudformation delete-stack --stack-name "udacity-final-project-cluster-${CIRCLE_WORKFLOW_ID:0:7}"
-            else 
-              echo '--------------------Cannot Cleanup--------------------'
-            fi
+            aws eks update-kubeconfig --region us-east-1  --name udacity-devops-project-final
+      - run:
+          name: Get services in kubectl
+          command: |
+            kubectl get services | grep publicapp > tmp-services.txt
+            sed 's/ .*//' tmp-services.txt > services.txt 
+            kubectl delete service $(cat  services.txt| sed 's/publicapp-f0d1e716//g'  | sed -r '/^\s*$/d')
 
 workflows:
   default:
@@ -205,6 +194,6 @@ workflows:
       - deploy-app
       - smoke-test:
           requires: [deploy-app]
-      # - cleanup:
-      #     requires: [smoke-test]
+      - cleanup:
+          requires: [smoke-test]
 
