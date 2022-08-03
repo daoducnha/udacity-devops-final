@@ -25,10 +25,10 @@
 	},
     {
 		"ParameterKey": "EKSClusterName",
-		"ParameterValue": "udacity-devops-project-final"
+		"ParameterValue": "udacity-devops-project-final1"
 	},
     {
 		"ParameterKey": "EKSIAMRoleName",
-		"ParameterValue": "udacity-devops-project-final-role"
+		"ParameterValue": "udacity-devops-project-final-role1"
 	}
 ]

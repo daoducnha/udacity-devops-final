@@ -66,6 +66,7 @@ jobs:
       - checkout
       - run:
           name: "Create eks cluster"
+          no_output_timeout: 30m
           command: |
             cd .circleci/files
             aws cloudformation deploy \
@@ -76,6 +77,7 @@ jobs:
               --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"             
       - run:
           name: Create group node for eks
+          no_output_timeout: 30m
           command: |
             cd .circleci/files
             aws cloudformation deploy \
@@ -144,6 +146,38 @@ jobs:
               return 1
             fi
 
+  cleanup:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Get old stack workflow id
+          command: |
+            export OldWorkflowID=$(aws cloudformation \
+                    list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+                    --no-paginate --output text)
+            echo OldWorkflowID: "${OldWorkflowID}"
+            echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"
+            export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
+                    --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
+            echo Stack names: "${STACKS[@]}"
+            echo "${OldWorkflowID}" > ~/OldWorkflowID.txt
+      - run:
+          name: Remove old stacks and files
+          no_output_timeout: 30m
+          command: |
+            OldWorkflowID=$(cat ~/OldWorkflowID.txt)
+            echo "OldWorkflowID: ${OldWorkflowID}"
+
+            if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OldWorkflowID}" ]]
+            then
+              aws cloudformation delete-stack --stack-name "udacity-final-project-groupnode-${CIRCLE_WORKFLOW_ID:0:7}"
+              aws cloudformation delete-stack --stack-name "udacity-final-project-cluster-${CIRCLE_WORKFLOW_ID:0:7}"
+            else 
+              echo '--------------------Cannot Cleanup--------------------'
+            fi
+
 workflows:
   default:
     jobs:
@@ -151,9 +185,11 @@ workflows:
       - build_image:
           requires: [check_syntax]
       - deploy_infrastructure:
-          requires: [check_syntax]
+          requires: [build_image]
       - deploy-app:
           requires: [deploy_infrastructure]
-      # - smoke-test:
-      #     requires: [deploy-app]
+      - smoke-test:
+          requires: [deploy-app]
+      - cleanup:
+          requires: [smoke-test]
 
