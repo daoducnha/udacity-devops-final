@@ -69,23 +69,34 @@ jobs:
           no_output_timeout: 30m
           command: |
             cd .circleci/files
-            aws cloudformation deploy \
+
+            if aws cloudformation describe-stacks --stack-name  udacity-final-project-cluster-f0d1e71 --query "Stacks[0].StackStatus" | grep CREATE_COMPLETE
+            then
+              echo "Cluster udacity-final-project-cluster-f0d1e71 already exist"
+            else
+              aws cloudformation deploy \
               --template-file eks-cluster.yml \
               --tags project=udacity-final-project \
-              --stack-name "udacity-final-project-cluster-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --stack-name "udacity-final-project-cluster-f0d1e71" \
               --parameter-overrides file://eks-cluster-parameters.json \
-              --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"             
+              --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"   
+            fi       
       - run:
           name: Create group node for eks
           no_output_timeout: 30m
           command: |
             cd .circleci/files
-            aws cloudformation deploy \
+            if aws cloudformation describe-stacks --stack-name  udacity-final-project-groupnode-f0d1e71 --query "Stacks[0].StackStatus" | grep CREATE_COMPLETE
+            then
+              echo "Group node udacity-final-project-groupnode-f0d1e71 already exist"
+            else
+              aws cloudformation deploy \
               --template-file eks-group-node.yml \
               --tags project=udacity-final-project \
-              --stack-name "udacity-final-project-groupnode-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --stack-name "udacity-final-project-groupnode-f0d1e71" \
               --parameter-overrides file://eks-group-node-parameters.json \
               --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" 
+            fi
 
   deploy-app:
     docker:
@@ -105,18 +116,18 @@ jobs:
       - run:
           name: Create deployment
           command: |
-            kubectl create deploy udacity-f0d1e718 --image=daoducnha29493/udacity-devops-final:e564f5c
+            kubectl create deploy udacity-${CIRCLE_WORKFLOW_ID:0:7} --image=daoducnha29493/udacity-devops-final:e564f5c
       - run:
           name: Expose deployment
           command: |
-            kubectl expose deployment udacity-f0d1e718 --type=LoadBalancer --name=publicapp-f0d1e718 --port=80
+            kubectl expose deployment udacity-${CIRCLE_WORKFLOW_ID:0:7} --type=LoadBalancer --name=publicapp-${CIRCLE_WORKFLOW_ID:0:7} --port=80
             sleep 1m
       - run:
           name: store app endpoint and old
           command: |
             cd .circleci/files
             kubectl get services
-            api=$(kubectl get services publicapp-f0d1e718 --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+            api=$(kubectl get services publicapp-${CIRCLE_WORKFLOW_ID:0:7} --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
             echo $api >> app-endpoint.txt
             cat app-endpoint.txt
       - persist_to_workspace:
@@ -182,17 +193,18 @@ jobs:
           command: |
             kubectl get services | grep publicapp > tmp-services.txt
             sed 's/ .*//' tmp-services.txt > services.txt 
-            kubectl delete service $(cat  services.txt| sed 's/publicapp-f0d1e718//g'  | sed -r '/^\s*$/d')
+            kubectl delete service $(cat  services.txt| sed 's/publicapp-${CIRCLE_WORKFLOW_ID:0:7}//g'  | sed -r '/^\s*$/d')
 
 workflows:
   default:
     jobs:
       - check_syntax
-      # - build_image:
-      #     requires: [check_syntax]
-      # - deploy_infrastructure:
-      #     requires: [build_image]
-      - deploy-app
+      - build_image:
+          requires: [check_syntax]
+      - deploy_infrastructure:
+          requires: [build_image]
+      - deploy-app:
+          requires: [deploy_infrastructure]
       - smoke-test:
           requires: [deploy-app]
       - cleanup:
