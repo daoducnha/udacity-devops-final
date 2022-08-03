@@ -105,17 +105,18 @@ jobs:
       - run:
           name: Create deployment
           command: |
-            kubectl create deploy udacity-5ba07753 --image=daoducnha29493/udacity-devops-final:5ba07753
+            kubectl create deploy udacity-5ba07754 --image=daoducnha29493/udacity-devops-final:5ba07754
       - run:
           name: Expose deployment
           command: |
-            kubectl expose deployment udacity-5ba07753 --type=LoadBalancer --name=publicapp-5ba07753 --port=80
+            kubectl expose deployment udacity-5ba07754 --type=LoadBalancer --name=publicapp-5ba07754 --port=80
       - run:
           name: store app endpoint and old
           command: |
             cd .circleci/files
             touch app-endpoint.txt
-            kubectl get services publicapp-5ba07753 --output jsonpath='{.status.loadBalancer.ingress[0].hostname}' >> app-endpoint.txt
+            kubectl get services publicapp-5ba07754 --output jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+            kubectl get services publicapp-5ba07754 --output jsonpath='{.status.loadBalancer.ingress[0].hostname}' >> app-endpoint.txt
             pwd
             cat app-endpoint.txt
       - persist_to_workspace:
