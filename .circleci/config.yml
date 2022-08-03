@@ -92,12 +92,9 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
+      - run: yum install -y tar gzip
       - attach_workspace:
           at: ~/
-      - run:
-          name: install dependencies
-          command: |
-            yum install -y tar gzip
       - run:
           name: Install kubectl
           command: |
