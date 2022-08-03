@@ -105,20 +105,19 @@ jobs:
       - run:
           name: Create deployment
           command: |
-            kubectl create deploy udacity-f0d1e714 --image=daoducnha29493/udacity-devops-final:e564f5c
+            kubectl create deploy udacity-f0d1e715 --image=daoducnha29493/udacity-devops-final:e564f5c
       - run:
           name: Expose deployment
           command: |
-            kubectl expose deployment udacity-f0d1e714 --type=LoadBalancer --name=publicapp-f0d1e714 --port=80
+            kubectl expose deployment udacity-f0d1e715 --type=LoadBalancer --name=publicapp-f0d1e715 --port=80
             sleep 1m
       - run:
           name: store app endpoint and old
           command: |
             cd .circleci/files
             kubectl get services
-            api=$(kubectl get services publicapp-f0d1e714 --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+            api=$(kubectl get services publicapp-f0d1e715 --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
             echo $api >> app-endpoint.txt
-            # sed 's/\*\*\*\*\*\*\*\*\*/us-east-1/g' tmp-app-endpoint.txt > app-endpoint.txt
             cat app-endpoint.txt
       - persist_to_workspace:
           root: ~/
@@ -146,13 +145,13 @@ jobs:
           name: Smoke test.
           command: |
             cd .circleci/files
-            # sed 's/\*\*\*\*\*\*\*\*\*/us-east-1/g' tmp-app-endpoint.txt > app-endpoint.txt
-            
+          
             export APP_IP=$(cat app-endpoint.txt)
             
             export APP_ENDPOINT="http://${APP_IP}/hello"
 
             echo ${APP_ENDPOINT} 
+            sleep 1m
 
             if curl ${APP_ENDPOINT} | grep "Hello"
             then
