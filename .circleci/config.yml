@@ -118,7 +118,7 @@ jobs:
             cd .circleci/files
             touch app-endpoint.txt
             kubectl get services
-            api=$(kubectl get services publicapp-5ba07759 --output jsonpath='{}')
+            api=$(kubectl get services publicapp-5ba07759 --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
             echo $api >> app-endpoint.txt
             pwd
             cat app-endpoint.txt
