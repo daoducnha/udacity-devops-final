@@ -193,7 +193,8 @@ jobs:
           command: |
             kubectl get services | grep publicapp > tmp-services.txt
             sed 's/ .*//' tmp-services.txt > services.txt 
-            kubectl delete service $(cat  services.txt| sed 's/publicapp-${CIRCLE_WORKFLOW_ID:0:7}//g'  | sed -r '/^\s*$/d')
+            SERVICE=publicapp-${CIRCLE_WORKFLOW_ID:0:7}
+            kubectl delete service $(cat  services.txt| sed 's/'$SERVICE'//g' | sed -r '/^\s*$/d')
 
 workflows:
   default:
