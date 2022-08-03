@@ -116,7 +116,7 @@ jobs:
       - run:
           name: Create deployment
           command: |
-            kubectl create deploy udacity-${CIRCLE_WORKFLOW_ID:0:7} --image=daoducnha29493/udacity-devops-final:e564f5c
+            kubectl create deploy udacity-${CIRCLE_WORKFLOW_ID:0:7} --image=daoducnha29493/udacity-devops-final:${CIRCLE_WORKFLOW_ID:0:7}
       - run:
           name: Expose deployment
           command: |
