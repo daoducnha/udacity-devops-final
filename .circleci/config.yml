@@ -105,18 +105,18 @@ jobs:
       - run:
           name: Create deployment
           command: |
-            kubectl create deploy udacity-f0d1e716 --image=daoducnha29493/udacity-devops-final:e564f5c
+            kubectl create deploy udacity-f0d1e717 --image=daoducnha29493/udacity-devops-final:e564f5c
       - run:
           name: Expose deployment
           command: |
-            kubectl expose deployment udacity-f0d1e716 --type=LoadBalancer --name=publicapp-f0d1e716 --port=80
+            kubectl expose deployment udacity-f0d1e717 --type=LoadBalancer --name=publicapp-f0d1e717 --port=80
             sleep 1m
       - run:
           name: store app endpoint and old
           command: |
             cd .circleci/files
             kubectl get services
-            api=$(kubectl get services publicapp-f0d1e716 --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+            api=$(kubectl get services publicapp-f0d1e717 --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
             echo $api >> app-endpoint.txt
             cat app-endpoint.txt
       - persist_to_workspace:
@@ -167,6 +167,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: ~/
+      - run: yum install -y tar gzip
       - run:
           name: Install kubectl
           command: |
@@ -181,7 +182,7 @@ jobs:
           command: |
             kubectl get services | grep publicapp > tmp-services.txt
             sed 's/ .*//' tmp-services.txt > services.txt 
-            kubectl delete service $(cat  services.txt| sed 's/publicapp-f0d1e716//g'  | sed -r '/^\s*$/d')
+            kubectl delete service $(cat  services.txt| sed 's/publicapp-f0d1e717//g'  | sed -r '/^\s*$/d')
 
 workflows:
   default:
